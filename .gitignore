@@ -1,14 +1,41 @@
-# Byggede filer
-build/
+# Prerequisites
+*.d
+
+# Object files and built executables
 *.o
-*.a
+*.obj
+*.ko
+*.elf
+*.out
 *.exe
-test_*
+*.app
 
-# Men IKKE blokker test_*.c – de skal med!
-!tests/*.c       # Force inkluder alle .c-filer i tests/-mappen
+# Precompiled Headers
+*.gch
+*.pch
 
-# Editor-filer
-.DS_Store
-*.swp
+# Libraries
+*.lib
+*.a
+*.la
+*.lo
+*.dll
+*.so
+*.dylib
+
+# Debug files
+*.dSYM/
+*.su
+*.idb
+*.pdb
+
+# Temporary or editor-specific files
+*~
+*.tmp
 .vscode/
+.idea/
+
+# Build directories (optional, customize as needed)
+/build/
+/bin/
+/obj/
