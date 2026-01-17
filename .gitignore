@@ -1,0 +1,10 @@
+# Byggede filer
+build/
+*.o
+*.a
+*.exe
+test_*
+
+# Editor-filer
+.DS_Store
+*.swp
