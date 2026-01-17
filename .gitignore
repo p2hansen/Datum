@@ -8,3 +8,4 @@ test_*
 # Editor-filer
 .DS_Store
 *.swp
+.vscode/
