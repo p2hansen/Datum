@@ -302,30 +302,3 @@ long long Datum_getAsInteger(Datum_T datum)
 
     return LONG_MAX;
 }
-
-/**
- * @brief Returns the value as double.
- *
- * - If the datum is a double, returns it directly.
- * - If the datum is an integer, converts it to double.
- * - Otherwise (not numeric, NULL, or invalid datum), returns DBL_MAX as error indicator.
- *
- * @param datum Valid Datum pointer
- * @return The double value, or DBL_MAX on error/invalid type
- */
-double Datum_getAsDouble(Datum_T datum)
-{
-    if (!datum || !Datum_isDatum(datum)) {
-        return DBL_MAX;
-    }
-
-    if (datum->flags & DATUM_Double) {
-        return datum->value.r;
-    }
-
-    if (datum->flags & DATUM_Int) {
-        return (double)datum->value.i;
-    }
-
-    return DBL_MAX;
-}
