@@ -13,7 +13,7 @@
 
 #define DATUM_STRUCTID 20260117
 const size_t THIS_DATUM_TP = 0xe3eceee64a2b360; // sha1 hash from git
-const static char *DatumTypeName = "datum";
+static const char *DatumTypeName = "datum";
 
 struct Datum {
     size_t thisTp;
@@ -63,20 +63,26 @@ size_t utf8_charlen(uint8_t c)
     else return 0;                                 /* invalid UTF8 */
 }
 
+/**
+ * @brief checks if the given utf8 character is valid
+ */
 size_t utf8_valid(const uint8_t *c)
 {
     size_t clen = utf8_charlen(*c);
-    switch (clen)
-    {
-        case 4: if ((c[3] & 0xc0) != 0x80) return 0;
-        case 3: if ((c[2] & 0xc0) != 0x80) return 0;
-        case 2: if ((c[1] & 0xc0) != 0x80) return 0;
-        case 1: return clen;                        /* no trailing bytes to validate */
-        case 0: return 0;                           /* invalid utf8 */
+    if (clen == 0) return 0;
+
+    // Sjekk alle trailing bytes (starter fra indeks 1)
+    for (size_t i = 1; i < clen; i++) {
+        if ((c[i] & 0xc0) != 0x80) {
+            return 0;
+        }
     }
-    return clen;                                    /* don't complain, gcc */
+    return clen;
 }
 
+/**
+ * @brief converts utf8 character to utf32 
+ */
 uint32_t utf8_to_32(const uint8_t *c)
 {
     switch (utf8_valid(c))
@@ -202,4 +208,124 @@ bool Datum_isDouble(Datum_T datum)
 bool Datum_isNull(Datum_T datum)
 {
     return (Datum_isDatum(datum) && datum->flags & DATUM_Null) ? true : false;
+}
+
+/**
+ * @brief Creates a new Datum as an integer and sets its value to val
+ * @param val The integer value to store
+ * @return New Datum_T or NULL on allocation failure
+ */
+Datum_T Datum_asInteger(long long val)
+{
+    Datum_T datum = Datum_new();
+    if (!datum) {
+        return NULL;
+    }
+
+    datum->value.i = val;
+    datum->flags |= DATUM_Int | DATUM_Dyn;  // Dyn fordi vi allokerte med calloc
+    // type-feltet ditt kan også settes her hvis du bruker det: datum->type = DATUM_Int;
+
+    return datum;
+}
+
+/**
+ * @brief Creates a new Datum as a double and sets its value to val
+ * @param val The double value to store
+ * @return New Datum_T or NULL on allocation failure
+ */
+Datum_T Datum_asDouble(double val)
+{
+    Datum_T datum = Datum_new();
+    if (!datum) {
+        return NULL;
+    }
+
+    datum->value.r = val;
+    datum->flags |= DATUM_Double | DATUM_Dyn;
+    // type-feltet ditt kan også settes her hvis du bruker det: datum->type = DATUM_Double;
+
+    return datum;
+}
+
+/**
+ * @brief Returns the value as double.
+ *
+ * If the datum is a double, returns it directly.
+ * If the datum is an integer, converts it to double.
+ * Otherwise (not numeric, NULL, or invalid datum), returns DBL_MAX as error indicator.
+ *
+ * @param datum Valid Datum pointer
+ * @return The double value, or DBL_MAX on error/invalid type
+ */
+double Datum_getAsDouble(Datum_T datum)
+{
+    if (!datum || !Datum_isDatum(datum)) {
+        return DBL_MAX;  // Tidlig retur ved ugyldig input
+    }
+
+    if (datum->flags & DATUM_Double) {
+        return datum->value.r;
+    }
+
+    if (datum->flags & DATUM_Int) {
+        return (double)datum->value.i;  // Konverter int til double
+    }
+
+    return DBL_MAX;  // Ikke numerisk type
+}
+
+/**
+ * @brief Returns the value as long long.
+ *
+ * - If the datum is an integer, returns it directly.
+ * - If the datum is a double, converts it to long long (truncates decimal part).
+ * - Otherwise (not numeric, NULL, or invalid datum), returns LONG_MAX as error indicator.
+ *
+ * @note Converting from double may lose precision or cause overflow (no range check).
+ * @param datum Valid Datum pointer
+ * @return The long long value, or LONG_MAX on error/invalid type
+ */
+long long Datum_getAsInteger(Datum_T datum)
+{
+    if (!datum || !Datum_isDatum(datum)) {
+        return LONG_MAX;
+    }
+
+    if (datum->flags & DATUM_Int) {
+        return datum->value.i;
+    }
+
+    if (datum->flags & DATUM_Double) {
+        return (long long)datum->value.r;  // Truncates toward zero
+    }
+
+    return LONG_MAX;
+}
+
+/**
+ * @brief Returns the value as double.
+ *
+ * - If the datum is a double, returns it directly.
+ * - If the datum is an integer, converts it to double.
+ * - Otherwise (not numeric, NULL, or invalid datum), returns DBL_MAX as error indicator.
+ *
+ * @param datum Valid Datum pointer
+ * @return The double value, or DBL_MAX on error/invalid type
+ */
+double Datum_getAsDouble(Datum_T datum)
+{
+    if (!datum || !Datum_isDatum(datum)) {
+        return DBL_MAX;
+    }
+
+    if (datum->flags & DATUM_Double) {
+        return datum->value.r;
+    }
+
+    if (datum->flags & DATUM_Int) {
+        return (double)datum->value.i;
+    }
+
+    return DBL_MAX;
 }
