@@ -5,6 +5,9 @@ build/
 *.exe
 test_*
 
+# Men IKKE blokker test_*.c – de skal med!
+!tests/*.c       # Force inkluder alle .c-filer i tests/-mappen
+
 # Editor-filer
 .DS_Store
 *.swp
